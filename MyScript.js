@@ -16,6 +16,11 @@ let slideIndex = 0,
   posInit = 0,
   posFinal = 0;
 
+let nextTrf = 0,
+  prevTrf = 0,
+  allowSwipe = true,
+  lastTrf = (slides.length - 1) * slideWidth;
+
 const posThreshold = slideWidth * 0.35,
   trfRegExp = /[-0-9.]+(?=px)/; // С помощью регулярного выражения с приминением .match(ниже по коду) мы возвращаем массив трёх чисел (Потому что translate3d имеет три числа перед (?=px) и можем обратиться нарпимер к оси Х ([0]) и от него отнять posX2 и переместить наш трек)
 
@@ -28,6 +33,8 @@ slide()
 function swipeStart() {
   let evt = getEvent();
 
+  nextTrf = (slideIndex + 1) * -slideWidth;
+  prevTrf = (slideIndex - 1) * -slideWidth;
   // берем начальную позицию курсора по оси Х
   posInit = posX1 = evt.clientX;
 
@@ -49,6 +56,31 @@ function swipeAction() {
   posX2 = posX1 - evt.clientX;
   posX1 = evt.clientX;
 
+  if (slideIndex === 0) {
+    if (posInit < posX1) {
+      setTransform(transform, 0);
+      return;
+    } else {
+      console.log('allowSwipe = true')
+      allowSwipe = true;
+    }
+  }
+
+  if (slideIndex === slides.length - 1) {
+    if (posInit > posX1) {
+      setTransform(transform, lastTrf);
+      return;
+    } else {
+      console.log('allowSwipe = true')
+      allowSwipe = true;
+    }
+  }
+
+  // if (posInit > posX1 && transform < nextTrf || posInit < posX1 && transform > prevTrf) {
+  //   reachEdge();
+  //   return;
+  // }
+
   sliderTrack.style.transform = `translate3d(${transform - posX2}px, 0px, 0px)`;
 }
 
@@ -60,21 +92,36 @@ function swipeEnd() {
   document.removeEventListener('touchend', swipeEnd);
   document.removeEventListener('mouseup', swipeEnd);
 
-  // убираем знак минус и сравниваем с порогом сдвига слайда
-  if (Math.abs(posFinal) > posThreshold) {
-    // если мы тянули вправо, то уменьшаем номер текущего слайда
-    if (posInit < posX1) {
-      slideIndex--;
-      // если мы тянули влево, то увеличиваем номер текущего слайда
-    } else if (posInit > posX1) {
-      slideIndex++;
+  if (allowSwipe) {
+    console.log('allow-swipe END')
+    // убираем знак минус и сравниваем с порогом сдвига слайда
+    if (Math.abs(posFinal) > posThreshold) {
+      // если мы тянули вправо, то уменьшаем номер текущего слайда
+      if (posInit < posX1) {
+        console.log('allow-swipe--')
+        slideIndex--;
+        // если мы тянули влево, то увеличиваем номер текущего слайда
+
+      } else if (posInit > posX1) {
+        console.log('allow-swipe++')
+
+        slideIndex++;
+      }
     }
+
+    // если курсор двигался, то запускаем функцию переключения слайдов
+    if (posInit !== posX1) {
+      // allowSwipe = false
+      console.log('allow-swipe___slide')
+
+      slide();
+    } else {
+      allowSwipe = true
+    }
+  } else {
+    allowSwipe = true
   }
 
-  // если курсор двигался, то запускаем функцию переключения слайдов
-  if (posInit !== posX1) {
-    slide();
-  }
 }
 
 
@@ -84,6 +131,20 @@ function getEvent() {
 
 }
 
+function setTransform(transform, comapreTransform) {
+  if (transform >= comapreTransform) {
+    if (transform > comapreTransform) {
+      sliderTrack.style.transform = `translate3d(${comapreTransform}px, 0px, 0px)`;
+    }
+  }
+  allowSwipe = false;
+}
+
+// function reachEdge() {
+//   transition = false;
+//   swipeEnd();
+//   allowSwipe = true;
+// };
 
 function slide() {
   sliderTrack.style.transition = 'transform .5s';
@@ -106,95 +167,3 @@ arrows.addEventListener('click', function () {
 })
 
 
-
-
-
-// ========================================================
-// let slider = document.querySelector('.slider'),
-//   sliderList = slider.querySelector('.slider-list'),
-//   sliderTrack = slider.querySelector('.slider-track'),
-//   slides = slider.querySelectorAll('.slide'),
-//   arrows = slider.querySelector('.slider-arrows'),
-//   prev = arrows.children[0],
-//   next = arrows.children[1],
-//   slideWidth = slides[0].offsetWidth,
-//   slideIndex = 0,
-//   posInit = 0,
-//   posX1 = 0,
-//   posX2 = 0,
-//   posFinal = 0,
-//   posThreshold = slideWidth * .35,
-//   trfRegExp = /[-0-9.]+(?=px)/,
-//   slide = function () {
-//     sliderTrack.style.transition = 'transform .5s';
-//     sliderTrack.style.transform = `translate3d(-${slideIndex * slideWidth}px, 0px, 0px)`;
-
-//     // делаем стрелку prev недоступной на первом слайде
-//     // и доступной в остальных случаях
-//     // делаем стрелку next недоступной на последнем слайде
-//     // и доступной в остальных случаях
-//     prev.classList.toggle('disabled', slideIndex === 0);
-//     next.classList.toggle('disabled', slideIndex === --slides.length);
-//   }, getEvent = function () {
-//     return event.type.search('touch') !== -1 ? event.touches[0] : event;
-//     // p.s. event - аргумент по умолчанию в функции
-//   },
-//   swipeStart = function () {
-//     let evt = getEvent();
-
-//     // берем начальную позицию курсора по оси Х
-//     posInit = posX1 = evt.clientX;
-
-//     // убираем плавный переход, чтобы track двигался за курсором без задержки
-//     // т.к. он будет включается в функции slide()
-//     sliderTrack.style.transition = '';
-
-//     // и сразу начинаем отслеживать другие события на документе
-//     document.addEventListener('touchmove', swipeAction);
-//     document.addEventListener('touchend', swipeEnd);
-//     document.addEventListener('mousemove', swipeAction);
-//     document.addEventListener('mouseup', swipeEnd);
-//   },
-//   swipeAction = function () {
-//     let evt = getEvent(),
-//       // для более красивой записи возьмем в переменную текущее свойство transform
-//       style = sliderTrack.style.transform = `translate3d(0px, 0px, 0px)`,
-//       // считываем трансформацию с помощью регулярного выражения и сразу превращаем в число
-//       transform = +style.match(trfRegExp)[0];
-
-//     posX2 = posX1 - evt.clientX;
-//     posX1 = evt.clientX;
-
-//     sliderTrack.style.transform = `translate3d(${transform - posX2}px, 0px, 0px)`;
-//     // можно было бы использовать метод строк .replace():
-//     // sliderTrack.style.transform = style.replace(trfRegExp, match => match - posX2);
-//     // но в дальнейшем нам нужна будет текущая трансформация в переменной
-//   }, swipeEnd = function () {
-//     // финальная позиция курсора
-//     posFinal = posInit - posX1;
-
-//     document.removeEventListener('touchmove', swipeAction);
-//     document.removeEventListener('mousemove', swipeAction);
-//     document.removeEventListener('touchend', swipeEnd);
-//     document.removeEventListener('mouseup', swipeEnd);
-
-//     // убираем знак минус и сравниваем с порогом сдвига слайда
-//     if (Math.abs(posFinal) > posThreshold) {
-//       // если мы тянули вправо, то уменьшаем номер текущего слайда
-//       if (posInit < posX1) {
-//         slideIndex--;
-//         // если мы тянули влево, то увеличиваем номер текущего слайда
-//       } else if (posInit > posX1) {
-//         slideIndex++;
-//       }
-//     }
-
-//     // если курсор двигался, то запускаем функцию переключения слайдов
-//     if (posInit !== posX1) {
-//       slide();
-//     }
-
-//   };
-
-// document.addEventListener('touchstart', swipeStart)
-// document.addEventListener('mousedown', swipeStart)
