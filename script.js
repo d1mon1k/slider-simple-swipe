@@ -200,7 +200,7 @@ function swipeStart() {
     posInit = posX1 = evt.clientX;
     posY1 = evt.clientY;
 
-    sliderTrack.style.transition = ''; //! Зачем ???
+    sliderTrack.style.transition = ''; //* Для того что бы палец хватал и двигал слайд без задержек
 
     document.addEventListener('touchmove', swipeAction);
     document.addEventListener('mousemove', swipeAction);

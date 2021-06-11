@@ -57,8 +57,7 @@
   cursor: pointer;
 }
 
-.next.disabled,
-.prev.disabled {
+.disabled {
   opacity: .25;
   pointer-events: none;
 }
