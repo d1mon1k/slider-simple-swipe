@@ -18,7 +18,6 @@ const trfRegExp = /[-0-9.]+(?=px)/,
   posThreshold = sliderWidth * 0.35;
 
 
-
 function getEvent() {
   return event.type.search('touch') != -1 ? event.targetTouches[0] : event
 }
@@ -26,20 +25,19 @@ function getEvent() {
 function swipeStart() {
   let evt = getEvent()
 
-  if (allowSwipe = true) {
-    sliderTrack.style.transition = ''
+  sliderTrack.style.transition = ''
 
-    posInit = posX1 = evt.clientX
+  posInit = posX1 = evt.clientX
 
-    document.addEventListener('touchmove', swipeAction)
-    document.addEventListener('touchend', swipeEnd)
-    document.addEventListener('mousemove', swipeAction)
-    document.addEventListener('mouseup', swipeEnd)
-  }
+  document.addEventListener('touchmove', swipeAction)
+  document.addEventListener('touchend', swipeEnd)
+  document.addEventListener('mousemove', swipeAction)
+  document.addEventListener('mouseup', swipeEnd)
 
 }
 
 function swipeAction() {
+
   let evt = getEvent(),
     style = sliderTrack.style.transform,
     transform = +style.match(trfRegExp)[0];
@@ -47,20 +45,21 @@ function swipeAction() {
   posX2 = posX1 - evt.clientX
   posX1 = evt.clientX
 
-  //Запретим доступ на 0 слайде в лево во время свайпа
+  // Запретим доступ на 0 слайде в лево во время свайпа
   if (sliderIndex === 0) {
     if (posX1 > posInit) {
-      console.log('slider === 0')
-      setTransform(transform, 0)
+      allowSwipe = false
+      return;
     } else {
       allowSwipe = true
     }
   }
 
   //Запретим доступ на последнем слайде в право во время свайпа
-  if (sliderIndex = slides.length - 1) {
+  if (sliderIndex === slides.length - 1) {
     if (posX1 < posInit) {
-      setTransform(transform, (slides.length - 1) * sliderWidth)
+      allowSwipe = false
+      return;
     } else {
       allowSwipe = true
     }
@@ -76,7 +75,6 @@ function swipeEnd() {
   posFinal = posInit - posX1
 
   if (allowSwipe) {
-    console.log('end')
     if (Math.abs(posFinal) > posThreshold) {
       if (posInit > posX1) {
         sliderIndex++
@@ -89,9 +87,8 @@ function swipeEnd() {
       slide()
     }
   } else {
-    allowSwipe = true
+    allowSwipe = true;
   }
-
 }
 
 function slide() {
@@ -101,16 +98,6 @@ function slide() {
 
   prev.classList.toggle('disabled', sliderIndex === 0)
   next.classList.toggle('disabled', sliderIndex === slides.length - 1)
-}
-
-function setTransform(transform, compareTransform) {
-  if (transform >= compareTransform) {
-    if (transform > compareTransform) {
-      console.log('compare')
-      sliderTrack.style.transform = `translate(${compareTransform}px, 0px, 0px)`
-    }
-  }
-  allowSwipe = false
 }
 
 arrows.addEventListener('click', function () {
