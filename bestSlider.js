@@ -77,7 +77,7 @@ let slider = document.querySelector('.slider'),
         isScroll = true;
         allowSwipe = false;
       } else if (posY < 7) {
-        isSwipe = true;
+        isSwipe = true; 
       }
     }
 
